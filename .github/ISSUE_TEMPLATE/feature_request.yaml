@@ -1,0 +1,52 @@
+name: Feature Request
+description: Suggest an idea for this project.
+title: "[Feature]: "
+labels: ["feature"]
+assignees:
+  - "@tunahanertekin"
+  - "@esgungor"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for filling out this feature request and contributing robolaunch.
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the Feature
+      description: A clear and concise description of the feature. Is it related to a bug, or other enhancement?
+      placeholder: Ex. I'm always frustrated when [...]
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the Solution
+      description: A clear and concise description of what you want to happen.
+      placeholder: Any suggestions?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: A clear and concise description of any alternative solutions or features you've considered.
+      placeholder: What are the other possible ways?
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context or screenshots about the feature request here.
+      placeholder: An architectural schema or data-flow diagram would be perfect!
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/robolaunch/robolaunch/CODE_OF_CONDUCT.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct.
+          required: true
