@@ -41,7 +41,7 @@ func TestContainerConfigure(t *testing.T) {
 	assert.Equal(t, out, []string{})
 	assert.Nil(t, err)
 
-	cont.Steps = []step.Step{
+	steps := []step.Step{
 		{
 			Name:         "step",
 			Command:      "ls",
@@ -49,13 +49,14 @@ func TestContainerConfigure(t *testing.T) {
 			IsPathInside: true,
 		},
 	}
+	cont.Steps = &steps
 
 	out, err = cont.Configure()
 
 	assert.Equal(t, len(out), 1)
 	assert.Nil(t, err)
 
-	cont.Steps = []step.Step{
+	cont.Steps = &[]step.Step{
 		{
 			Name:         "step",
 			Command:      "ls",

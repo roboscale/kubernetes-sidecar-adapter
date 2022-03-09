@@ -19,7 +19,7 @@ type Container struct {
 	Pid     int
 	Path    string
 	Adapter string
-	Steps   []step.Step
+	Steps   *[]step.Step
 }
 
 func New(pid int, adapter string) (Container, error) {
@@ -47,22 +47,22 @@ func (c *Container) Configure() ([]string, error) {
 	containerPathPlaceholder := ":::container:path:::"
 
 	aggOutput := []string{}
-	for key, step := range c.Steps {
-		if strings.Contains(step.Command, containerPathPlaceholder) {
-			c.Steps[key].Command = strings.Replace(c.Steps[key].Command, containerPathPlaceholder, c.Path, -1)
-		}
-		if !step.IsPathInside {
-			c.Steps[key].Path = c.Path + step.Path
-		}
+	if c.Steps != nil {
+		for _, step := range *c.Steps {
+			step.Command = strings.Replace(step.Command, containerPathPlaceholder, c.Path, -1)
+			if !step.IsPathInside {
+				step.Path = c.Path + step.Path
+			}
 
-		log.Println("Executing in container -> " + c.Name)
-		log.Println("\t" + c.Steps[key].Command)
-		out, err := c.Steps[key].Execute()
-		if err != nil {
-			aggOutput = append(aggOutput, err.Error())
-			return aggOutput, err
+			log.Println("Executing in container -> " + c.Name)
+			log.Println("\t" + step.Command)
+			out, err := step.Execute()
+			if err != nil {
+				aggOutput = append(aggOutput, err.Error())
+				return aggOutput, err
+			}
+			aggOutput = append(aggOutput, out)
 		}
-		aggOutput = append(aggOutput, out)
 	}
 
 	return aggOutput, nil
