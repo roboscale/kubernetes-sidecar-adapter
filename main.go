@@ -64,7 +64,7 @@ func main() {
 		steps := []step.Step{step1, step2, step3}
 
 		for sc := range sidecars {
-			sidecars[sc].Steps = steps
+			sidecars[sc].Steps = &steps
 			out, err := sidecars[sc].Configure()
 			if err != nil {
 				log.Println(out)
