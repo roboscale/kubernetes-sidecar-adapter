@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"os/exec"
 	"strconv"
@@ -30,15 +31,27 @@ func main() {
 				continue
 			}
 
-			containerName := strings.ReplaceAll(outstrRaw, "\n", "")
-			if _, ok := sidecarsMap[containerName]; ok {
+			containerFlag := strings.ReplaceAll(outstrRaw, "\n", "")
+			if _, ok := sidecarsMap[containerFlag]; ok {
 				continue
 			}
 
-			sidecarsMap[containerName], err = container.New(int(v.Pid), containerName)
+			cont, err := container.New(int(v.Pid), containerFlag)
 			if err != nil {
 				panic(err)
 			}
+
+			if cont.Type == "main" {
+				main = cont
+			} else if cont.Type == "sidecar" {
+				sidecarsMap[containerFlag] = cont
+			} else {
+				panic(errors.New("container undetected: " + containerFlag))
+			}
+		}
+
+		if main.Pid == 0 {
+			panic(errors.New("no main container"))
 		}
 
 		sidecars := []container.Container{}

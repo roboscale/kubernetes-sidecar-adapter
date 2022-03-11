@@ -20,12 +20,13 @@ type Container struct {
 	Steps *[]step.Step
 }
 
-func New(pid int, name string) (Container, error) {
+func New(pid int, flag string) (Container, error) {
 	// ./adapter_main_ros.sh
-
+	parts := strings.Split(flag, "_")
 	c := Container{}
 	c.Pid = pid
-	c.Name = name
+	c.Type = parts[0]
+	c.Name = parts[1]
 	c.Path = "/proc/" + strconv.Itoa(c.Pid) + "/root"
 
 	return c, nil
