@@ -1,7 +1,6 @@
 package container
 
 import (
-	"errors"
 	"log"
 	"strconv"
 	"strings"
@@ -14,30 +13,20 @@ type ContainerActions interface {
 }
 
 type Container struct {
-	Type    string
-	Name    string
-	Pid     int
-	Path    string
-	Adapter string
-	Steps   *[]step.Step
+	Type  string
+	Name  string
+	Pid   int
+	Path  string
+	Steps *[]step.Step
 }
 
-func New(pid int, adapter string) (Container, error) {
+func New(pid int, flag string) (Container, error) {
 	// ./adapter_main_ros.sh
-
+	parts := strings.Split(flag, "_")
 	c := Container{}
 	c.Pid = pid
-	c.Adapter = adapter
-
-	if pid == 0 || !strings.Contains(adapter, "adapter") {
-		return Container{}, errors.New("container needs pid and adapter")
-	}
-
-	plain := adapter[2 : len(adapter)-3]
-	parts := strings.Split(plain, "_")
-
-	c.Type = parts[1]
-	c.Name = parts[2]
+	c.Type = parts[0]
+	c.Name = parts[1]
 	c.Path = "/proc/" + strconv.Itoa(c.Pid) + "/root"
 
 	return c, nil
@@ -66,4 +55,37 @@ func (c *Container) Configure() ([]string, error) {
 	}
 
 	return aggOutput, nil
+}
+
+func (c Container) Equals(second Container) bool {
+	if c.Name == second.Name &&
+		c.Type == second.Type &&
+		c.Pid == second.Pid {
+		return true
+	}
+
+	return false
+}
+
+func AllEquals(first []Container, second []Container) bool {
+	if len(first) != len(second) {
+		return false
+	}
+
+	for _, f := range first {
+
+		hasEqual := false
+		for _, s := range second {
+			if f.Equals(s) {
+				hasEqual = true
+				break
+			}
+		}
+
+		if !hasEqual {
+			return false
+		}
+	}
+
+	return true
 }

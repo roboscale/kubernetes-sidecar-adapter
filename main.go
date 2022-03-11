@@ -1,7 +1,10 @@
 package main
 
 import (
+	"errors"
 	"log"
+	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -11,35 +14,70 @@ import (
 )
 
 func main() {
+	latestSidecars := []container.Container{}
 
 	for {
 		main := container.Container{}
-		sidecars := []container.Container{}
-		processes, _ := process.Processes()
-		for _, v := range processes {
+		sidecarsMap := make(map[string]container.Container)
+		var sidecars []container.Container
+		for {
+			processes, _ := process.Processes()
 
-			if command, _ := v.CmdlineSlice(); len(command) > 1 && strings.Contains(command[1], "adapter") {
-				cont, err := container.New(int(v.Pid), command[1])
+			sidecars = []container.Container{}
+
+			for _, v := range processes {
+				if v.Pid == 1 {
+					continue
+				}
+				commandStr := "ls /proc/" + strconv.Itoa(int(v.Pid)) + "/root/etc/container"
+				command := exec.Command("/bin/bash", "-c", commandStr)
+				stdout, err := command.Output()
+				outstrRaw := string(stdout)
+				if err != nil {
+					continue
+				}
+
+				containerFlag := strings.ReplaceAll(outstrRaw, "\n", "")
+				if _, ok := sidecarsMap[containerFlag]; ok {
+					continue
+				}
+
+				cont, err := container.New(int(v.Pid), containerFlag)
 				if err != nil {
 					panic(err)
 				}
 
-				switch cont.Type {
-				case "main":
+				if cont.Type == "main" {
 					main = cont
-				case "sidecar":
-					sidecars = append(sidecars, cont)
+				} else if cont.Type == "sidecar" {
+					sidecarsMap[containerFlag] = cont
+				} else {
+					panic(errors.New("container undetected: " + containerFlag))
 				}
-
 			}
+
+			if main.Pid == 0 {
+				panic(errors.New("no main container"))
+			}
+
+			for _, v := range sidecarsMap {
+				sidecars = append(sidecars, v)
+			}
+
+			log.Println("Main Container: " + main.Name + "\tPath:" + main.Path)
+			for _, s := range sidecars {
+				log.Println("Sidecar Container: " + s.Name + "\tPath:" + s.Path)
+			}
+
+			if !container.AllEquals(latestSidecars, sidecars) {
+				log.Println("change detected. steps are being executed...")
+				break
+			}
+			time.Sleep(5 * time.Second)
+
 		}
 
-		log.Println("Main Container: " + main.Name + "/tPath:" + main.Path)
-		sidecarLogs := ""
-		for _, s := range sidecars {
-			sidecarLogs += "Sidecar Container: " + s.Name + "\tPath:" + s.Path + "\n"
-		}
-		log.Println(sidecarLogs)
+		latestSidecars = sidecars
 
 		// fmt.Printf("%+v\n", main)
 		// fmt.Printf("%+v\n", sidecars)
@@ -73,7 +111,6 @@ func main() {
 			log.Println(out)
 		}
 
-		time.Sleep(time.Minute * 1)
 	}
 
 }
