@@ -56,3 +56,36 @@ func (c *Container) Configure() ([]string, error) {
 
 	return aggOutput, nil
 }
+
+func (c Container) Equals(second Container) bool {
+	if c.Name == second.Name &&
+		c.Type == second.Type &&
+		c.Pid == second.Pid {
+		return true
+	}
+
+	return false
+}
+
+func AllEquals(first []Container, second []Container) bool {
+	if len(first) != len(second) {
+		return false
+	}
+
+	for _, f := range first {
+
+		hasEqual := false
+		for _, s := range second {
+			if f.Equals(s) {
+				hasEqual = true
+				break
+			}
+		}
+
+		if !hasEqual {
+			return false
+		}
+	}
+
+	return true
+}
