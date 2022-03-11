@@ -12,12 +12,11 @@ func TestContainerCreation(t *testing.T) {
 
 	cont, err := New(1, "./adapter_main_x.sh")
 	expectedCont := Container{
-		Type:    "main",
-		Name:    "x",
-		Pid:     1,
-		Path:    "/proc/1/root",
-		Adapter: "./adapter_main_x.sh",
-		Steps:   nil,
+		Type:  "main",
+		Name:  "x",
+		Pid:   1,
+		Path:  "/proc/1/root",
+		Steps: nil,
 	}
 
 	assert.Equal(t, cont, expectedCont)

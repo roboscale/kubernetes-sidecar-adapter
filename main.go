@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -14,24 +16,34 @@ func main() {
 
 	for {
 		main := container.Container{}
-		sidecars := []container.Container{}
 		processes, _ := process.Processes()
+		sidecarsMap := make(map[string]container.Container)
 		for _, v := range processes {
-
-			if command, _ := v.CmdlineSlice(); len(command) > 1 && strings.Contains(command[1], "adapter") {
-				cont, err := container.New(int(v.Pid), command[1])
-				if err != nil {
-					panic(err)
-				}
-
-				switch cont.Type {
-				case "main":
-					main = cont
-				case "sidecar":
-					sidecars = append(sidecars, cont)
-				}
-
+			if v.Pid == 1 {
+				continue
 			}
+			commandStr := "ls /proc/" + strconv.Itoa(int(v.Pid)) + "/root/etc/container"
+			command := exec.Command("/bin/bash", "-c", commandStr)
+			stdout, err := command.Output()
+			outstrRaw := string(stdout)
+			if err != nil {
+				continue
+			}
+
+			containerName := strings.ReplaceAll(outstrRaw, "\n", "")
+			if _, ok := sidecarsMap[containerName]; ok {
+				continue
+			}
+
+			sidecarsMap[containerName], err = container.New(int(v.Pid), containerName)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		sidecars := []container.Container{}
+		for _, v := range sidecarsMap {
+			sidecars = append(sidecars, v)
 		}
 
 		log.Println("Main Container: " + main.Name + "/tPath:" + main.Path)

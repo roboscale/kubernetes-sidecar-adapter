@@ -1,7 +1,6 @@
 package container
 
 import (
-	"errors"
 	"log"
 	"strconv"
 	"strings"
@@ -14,30 +13,19 @@ type ContainerActions interface {
 }
 
 type Container struct {
-	Type    string
-	Name    string
-	Pid     int
-	Path    string
-	Adapter string
-	Steps   *[]step.Step
+	Type  string
+	Name  string
+	Pid   int
+	Path  string
+	Steps *[]step.Step
 }
 
-func New(pid int, adapter string) (Container, error) {
+func New(pid int, name string) (Container, error) {
 	// ./adapter_main_ros.sh
 
 	c := Container{}
 	c.Pid = pid
-	c.Adapter = adapter
-
-	if pid == 0 || !strings.Contains(adapter, "adapter") {
-		return Container{}, errors.New("container needs pid and adapter")
-	}
-
-	plain := adapter[2 : len(adapter)-3]
-	parts := strings.Split(plain, "_")
-
-	c.Type = parts[1]
-	c.Name = parts[2]
+	c.Name = name
 	c.Path = "/proc/" + strconv.Itoa(c.Pid) + "/root"
 
 	return c, nil
